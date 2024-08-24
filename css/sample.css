@@ -20,11 +20,12 @@ header {
 main {
     width: 90%;
     max-width: 1200px;
+    margin-top: 20px;
 }
 
 .button-container {
     text-align: center;
-    margin: 20px 0;
+    margin-bottom: 20px;
 }
 
 .toggle-form-button {
@@ -89,7 +90,6 @@ td a:hover {
     color: red;
 }
 
-
 td .tooltip {
     position: relative;
     display: inline-block;
@@ -121,6 +121,7 @@ td .tooltip:hover .tooltiptext {
 .form-container {
     width: 100%;
     display: none; /* 初期表示を非表示に設定 */
+    margin-bottom: 20px; /* 表示位置を調整 */
 }
 
 form {
@@ -235,4 +236,3 @@ button[type="button"] {
 .map-container button:hover {
     background-color: #45a049;
 }
-
