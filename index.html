@@ -14,30 +14,8 @@
         <div class="button-container">
             <button class="toggle-form-button">新規被害について投稿する</button>
         </div>
-        
-        <div class="table-container">
-            <table id="postsTable">
-                <thead>
-                    <tr>
-                        <th>日時</th>
-                        <th>名前（カタカナ）</th>
-                        <th>名前（漢字）</th>
-                        <th>所属機関</th>
-                        <th>事態種別</th>
-                        <th>発生場所</th>
-                        <th>住所（つづき）</th>
-                        <th>マップリンク</th>
-                        <th>写真</th>
-                        <th>詳細（100字以内）</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- 投稿内容がここに追加される -->
-                </tbody>
-            </table>
-        </div>
-        
+
+        <!-- フォームをここに移動 -->
         <div class="form-container" style="display: none;">
             <form id="emergencyForm">
                 <!-- フォームフィールド -->
@@ -119,6 +97,31 @@
                 <button type="submit" id="submitBtn" class="disabled" disabled>投稿</button>
                 <button type="button" id="clearBtn">消去</button>
             </form>
+        </div>
+
+        <!-- テーブルの位置 -->
+        <div class="table-container">
+            <table id="postsTable">
+                <thead>
+                    <tr>
+                        <th>日時</th>
+                        <th>名前（カタカナ）</th>
+                        <th>名前（漢字）</th>
+                        <th>所属機関</th>
+                        <th>事態種別</th>
+                        <th>発生場所</th>
+                        <th>住所（つづき）</th>
+                        <th>マップリンク</th>
+                        <th>写真</th>
+                        <th>詳細（100字以内）</th>
+                        <th>人数</th> <!-- 人数欄を追加 -->
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 投稿内容がここに追加される -->
+                </tbody>
+            </table>
         </div>
 
         <!-- Google Mapsの表示モーダル -->
