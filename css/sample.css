@@ -89,6 +89,7 @@ td a:hover {
     color: red;
 }
 
+
 td .tooltip {
     position: relative;
     display: inline-block;
@@ -119,7 +120,7 @@ td .tooltip:hover .tooltiptext {
 
 .form-container {
     width: 100%;
-    display: none;
+    display: none; /* 初期表示を非表示に設定 */
 }
 
 form {
