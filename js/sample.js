@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ページ読み込み時にフォームのデータをlocalStorageから復元
     loadFormData();
+    loadPosts();
 
     // フォームの表示・非表示の切り替え
     toggleFormButton.addEventListener("click", () => {
@@ -109,7 +110,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const postsTable = document.getElementById("postsTable").getElementsByTagName('tbody')[0];
         const newRow = postsTable.insertRow();
-        localStorage.removeItem('formData');
 
         // 各入力値を取得
         const katakanaName = document.getElementById("katakanaName").value;
@@ -164,11 +164,15 @@ document.addEventListener("DOMContentLoaded", function () {
         submitBtn.classList.add("disabled");
         toggleFormButton.textContent = "新規被害について投稿する";
 
+        // テーブルのデータをローカルストレージに保存
+        savePosts();
+
         // 削除ボタンのイベントリスナーを追加
         const deleteBtn = newRow.querySelector(".deleteBtn");
         deleteBtn.addEventListener("click", () => {
             if (confirm("この投稿を削除しますか？")) {
                 newRow.remove();
+                savePosts(); // データ削除後にローカルストレージを更新
             }
         });
     });
@@ -187,61 +191,85 @@ document.addEventListener("DOMContentLoaded", function () {
             katakanaName: document.getElementById("katakanaName").value,
             kanjiName: document.getElementById("kanjiName").value,
             organization: document.getElementById("organization").value,
-            incidentType: document.getElementById("incidentType").value,
+            incidentType: incidentType.value,
             area: document.getElementById("area").value,
             address: document.getElementById("address").value,
             mapLink: document.getElementById("mapLink").value,
             memo: document.getElementById("memo").value,
-            peopleCount: document.getElementById("peopleCount").value,
-            unknownPeople: document.getElementById("unknownPeople").checked
+            unknownPeople: unknownPeople.checked,
+            peopleCount: peopleCount.value
         };
         localStorage.setItem('formData', JSON.stringify(formData));
     }
 
-    // フォームデータをlocalStorageから読み込む関数
+    // localStorageからフォームデータを読み込む関数
     function loadFormData() {
-        if (localStorage.getItem('formData')) {
-            const formData = JSON.parse(localStorage.getItem('formData'));
-            document.getElementById("katakanaName").value = formData.katakanaName;
-            document.getElementById("kanjiName").value = formData.kanjiName;
-            document.getElementById("organization").value = formData.organization;
-            document.getElementById("incidentType").value = formData.incidentType;
-            document.getElementById("area").value = formData.area;
-            document.getElementById("address").value = formData.address;
-            document.getElementById("mapLink").value = formData.mapLink;
-            document.getElementById("memo").value = formData.memo;
-            document.getElementById("peopleCount").value = formData.peopleCount;
-            document.getElementById("unknownPeople").checked = formData.unknownPeople;
-
-            if (formData.incidentType === "要救助者あり") {
-                document.getElementById("rescueDetails").style.display = "block";
-                document.getElementById("peopleCount").required = true;
-            }
+        const formData = JSON.parse(localStorage.getItem('formData'));
+        if (formData) {
+            document.getElementById("katakanaName").value = formData.katakanaName || "";
+            document.getElementById("kanjiName").value = formData.kanjiName || "";
+            document.getElementById("organization").value = formData.organization || "";
+            incidentType.value = formData.incidentType || "";
+            document.getElementById("area").value = formData.area || "";
+            document.getElementById("address").value = formData.address || "";
+            mapLinkInput.value = formData.mapLink || "";
+            document.getElementById("memo").value = formData.memo || "";
+            unknownPeople.checked = formData.unknownPeople || false;
+            peopleCount.value = formData.peopleCount || "";
         }
     }
 
-        // ページがロードされたときにフォームデータを復元する
-        window.addEventListener('load', loadFormData);
+    // 投稿内容をlocalStorageから読み込む関数
+    function loadPosts() {
+        const postsTable = document.getElementById("postsTable").getElementsByTagName('tbody')[0];
+        const posts = JSON.parse(localStorage.getItem('posts')) || [];
+        posts.forEach(post => {
+            const newRow = postsTable.insertRow();
+            newRow.innerHTML = `
+                <td>${post.datetime}</td>
+                <td>${post.katakanaName}</td>
+                <td>${post.kanjiName}</td>
+                <td>${post.organization}</td>
+                <td>${post.incidentType}</td>
+                <td>${post.area}</td>
+                <td>${post.address}</td>
+                <td>${post.mapLink ? `<a href="${post.mapLink}" target="_blank">${post.latLon}</a>` : 'なし'}</td>
+                <td>${post.photo ? '<img src="' + post.photo + '" alt="現場写真">' : 'なし'}</td>
+                <td class="tooltip">${post.memo.split('').map((char, index) => (index % 10 === 9 ? char + "<br>" : char)).join('')}<span class="tooltiptext">${post.memo}</span></td>
+                <td><button class="deleteBtn">削除</button></td>
+            `;
 
-        // フォームが送信されたときにデータを保存する
-        document.getElementById('emergencyForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // デフォルトのフォーム送信を防ぐ
-            saveFormData();
-            alert('データが保存されました');
+            // 削除ボタンのイベントリスナーを追加
+            const deleteBtn = newRow.querySelector(".deleteBtn");
+            deleteBtn.addEventListener("click", () => {
+                if (confirm("この投稿を削除しますか？")) {
+                    newRow.remove();
+                    savePosts(); // データ削除後にローカルストレージを更新
+                }
+            });
         });
+    }
 
-        // 消去ボタンを押したときの処理
-        document.getElementById('clearBtn').addEventListener('click', function() {
-            localStorage.removeItem('formData');
-            document.getElementById('emergencyForm').reset();
+    // 投稿内容をlocalStorageに保存する関数
+    function savePosts() {
+        const postsTable = document.getElementById("postsTable").getElementsByTagName('tbody')[0];
+        const rows = postsTable.getElementsByTagName('tr');
+        const posts = Array.from(rows).map(row => {
+            return {
+                datetime: row.cells[0].innerText,
+                katakanaName: row.cells[1].innerText,
+                kanjiName: row.cells[2].innerText,
+                organization: row.cells[3].innerText,
+                incidentType: row.cells[4].innerText,
+                area: row.cells[5].innerText,
+                address: row.cells[6].innerText,
+                mapLink: row.cells[7].innerHTML.includes('<a') ? row.cells[7].getElementsByTagName('a')[0].href : '',
+                latLon: row.cells[7].innerText,
+                photo: row.cells[8].getElementsByTagName('img')[0] ? row.cells[8].getElementsByTagName('img')[0].src : '',
+                memo: row.cells[9].innerText
+            };
         });
-
-        // Google Mapボタンのクリックイベント
-        document.getElementById('openMapBtn').addEventListener('click', function() {
-            const area = document.getElementById('area').value;
-            const address = document.getElementById('address').value;
-            const query = `${area} ${address}`;
-            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-            window.open(url, '_blank');
-        });
+        localStorage.setItem('posts', JSON.stringify(posts));
+    }
 });
+
