@@ -38,8 +38,9 @@
             </table>
         </div>
         
-        <div class="form-container">
+        <div class="form-container" style="display: none;">
             <form id="emergencyForm">
+                <!-- フォームフィールド -->
                 <label class="required">名前（カタカナ）</label>
                 <input type="text" id="katakanaName" required>
 
@@ -103,10 +104,10 @@
                 <input type="text" id="address">
 
                 <label>Google Mapリンク</label>
-                <input type="url" id="mapLink" placeholder="google map地図上で詳細場所リンクをコピーしてください">
+                <input type="url" id="mapLink" placeholder="google map地図上で詳細場所をクリックしてリンクをコピーしてください">
 
                 <div class="map-container">
-                    <button type="button" id="openMapBtn">Google Mapで場所を選択</button>
+                    <button type="button" id="openMapBtn">【救助が迅速化するため記入推奨】Google Mapで発生場所の緯度・経度を特定する</button>
                 </div>
 
                 <label class="required">現場写真</label>
