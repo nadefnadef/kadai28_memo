@@ -219,4 +219,29 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     }
+
+        // ページがロードされたときにフォームデータを復元する
+        window.addEventListener('load', loadFormData);
+
+        // フォームが送信されたときにデータを保存する
+        document.getElementById('emergencyForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // デフォルトのフォーム送信を防ぐ
+            saveFormData();
+            alert('データが保存されました');
+        });
+
+        // 消去ボタンを押したときの処理
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            localStorage.removeItem('formData');
+            document.getElementById('emergencyForm').reset();
+        });
+
+        // Google Mapボタンのクリックイベント
+        document.getElementById('openMapBtn').addEventListener('click', function() {
+            const area = document.getElementById('area').value;
+            const address = document.getElementById('address').value;
+            const query = `${area} ${address}`;
+            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+            window.open(url, '_blank');
+        });
 });
