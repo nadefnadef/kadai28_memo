@@ -4,10 +4,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("emergencyForm");
     const submitBtn = document.getElementById("submitBtn");
     const clearBtn = document.getElementById("clearBtn");
-    const incidentType = document.getElementById("incidentType");
-    const openMapBtn = document.getElementById("openMapBtn");
-    const mapLinkInput = document.getElementById("mapLink");
-    let selectedLocation = null;
+    const incidentTypeSelect = document.getElementById("incidentType");
+    const rescueDetails = document.getElementById("rescueDetails");
+    const peopleCountInput = document.getElementById("peopleCount");
+    const unknownPeopleCheckbox = document.getElementById("unknownPeople");
+    const openMapBtn = document.getElementById("openMapBtn"); // Google Mapsボタンの要素を取得
+
 
     // ページ読み込み時にフォームのデータをlocalStorageから復元
     loadFormData();
@@ -15,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // フォームの表示/非表示を切り替え
     toggleFormButton.addEventListener("click", function () {
-        if (formContainer.style.display === "none") {
+        if (formContainer.style.display === "none" || formContainer.style.display === "") {
             formContainer.style.display = "block";
         } else {
             formContainer.style.display = "none";
@@ -23,29 +25,43 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // フォーム送信時の処理
-    form.addEventListener("submit", function (event) {
+    form.addEventListener("submit", async function (event) {
         event.preventDefault();
-        const postData = getFormData();
+    
+        // 必須条件の検証
+        const incidentType = incidentTypeSelect.value;
+        const peopleCount = peopleCountInput.value;
+        const unknownPeopleChecked = unknownPeopleCheckbox.checked;
+        
+        if (incidentType === "要救助者あり" && !(peopleCount || unknownPeopleChecked)) {
+             alert("人数欄または「人数不明・複数人」にチェックをつけてください。");
+             return;
+        }
+
+        const postData = await getFormData();  // 非同期でフォームデータを取得
         addPostToTable(postData);
         savePosts();
         form.reset();
         submitBtn.disabled = true;
         submitBtn.classList.add("disabled");
-        toggleFormButton.click();  // フォームを非表示に戻す
+        formContainer.style.display = "none";  // フォームを非表示に戻す
     });
 
-    // フォームの入力が完了したら投稿ボタンを有効化
-    form.addEventListener("input", function () {
-        submitBtn.disabled = !form.checkValidity();
-        if (!submitBtn.disabled) {
-            submitBtn.classList.remove("disabled");
-        } else {
-            submitBtn.classList.add("disabled");
+    // フォームデータを取得してオブジェクトとして返す（非同期処理）
+    async function getFormData() {
+        const photoFile = document.getElementById("photo").files[0];
+        let photoBase64 = null;
+
+        if (photoFile) {
+            photoBase64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    resolve(e.target.result);
+                };
+                reader.readAsDataURL(photoFile);
+            });
         }
-    });
 
-    // フォームデータを取得してオブジェクトとして返す
-    function getFormData() {
         return {
             date: new Date().toLocaleString(),
             katakanaName: document.getElementById("katakanaName").value,
@@ -55,23 +71,11 @@ document.addEventListener("DOMContentLoaded", function () {
             area: document.getElementById("area").value,
             address: document.getElementById("address").value,
             mapLink: document.getElementById("mapLink").value,
-            photo: document.getElementById("photo").files[0],
-            memo: document.getElementById("memo").value
+            photo: photoBase64,
+            memo: document.getElementById("memo").value,
+            numberOfPeople: unknownPeopleCheckbox.checked ? "不明・複数人" : document.getElementById("peopleCount").value // 人数を追加
         };
     }
-
-    // Google Map ボタンのクリック時に新しいタブでGoogle Mapを開く
-    openMapBtn.addEventListener("click", function () {
-        const area = document.getElementById("area").value;
-        const address = document.getElementById("address").value;
-        
-        // 発生場所と住所（つづき）を結合してGoogle Mapで検索
-        const searchQuery = `${area} ${address}`;
-        const googleMapUrl = `https://www.google.com/maps/search/?q=${encodeURIComponent(searchQuery)}`;
-        
-        // Google Mapを別タブで開く
-        window.open(googleMapUrl, '_blank');
-    });
 
     // 投稿をテーブルに追加
     function addPostToTable(post) {
@@ -118,20 +122,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const photoCell = document.createElement("td");
         if (post.photo) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const img = document.createElement("img");
-                img.src = e.target.result;
-                img.alt = "写真";
-                photoCell.appendChild(img);
-            };
-            reader.readAsDataURL(post.photo);
+            const img = document.createElement("img");
+            img.src = post.photo;
+            img.alt = "写真";
+            photoCell.appendChild(img);
         }
         row.appendChild(photoCell);
 
         const memoCell = document.createElement("td");
         memoCell.textContent = post.memo;
         row.appendChild(memoCell);
+
+        const numberOfPeopleCell = document.createElement("td"); // 人数セルを追加
+        numberOfPeopleCell.textContent = post.numberOfPeople;
+        row.appendChild(numberOfPeopleCell);
 
         const actionCell = document.createElement("td");
         const deleteButton = document.createElement("button");
@@ -171,7 +175,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 address: cells[6].textContent,
                 mapLink: cells[7].querySelector("a")?.href,
                 photo: cells[8].querySelector("img")?.src,
-                memo: cells[9].textContent
+                memo: cells[9].textContent,
+                numberOfPeople: cells[10].textContent // 人数を保存
             };
         });
         localStorage.setItem("emergencyPosts", JSON.stringify(posts));
@@ -196,6 +201,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("address").value = formData.address || "";
             document.getElementById("mapLink").value = formData.mapLink || "";
             document.getElementById("memo").value = formData.memo || "";
+            document.getElementById("peopleCount").value = formData.numberOfPeople || ""; // 人数を復元
         }
     }
 
@@ -213,4 +219,55 @@ document.addEventListener("DOMContentLoaded", function () {
         const tableBody = document.querySelector("#postsTable tbody");
         tableBody.innerHTML = "";
     }
+
+    // 「要救助者あり」を選択した際に人数欄を表示する処理
+    incidentTypeSelect.addEventListener("change", function () {
+        if (incidentTypeSelect.value === "要救助者あり") {
+            rescueDetails.style.display = "block";
+        } else {
+            rescueDetails.style.display = "none";
+        }
+    });
+
+    // 人数不明チェックボックスが変更されたときの処理
+    unknownPeopleCheckbox.addEventListener("change", function () {
+        if (unknownPeopleCheckbox.checked) {
+            peopleCountInput.disabled = true;
+            peopleCountInput.style.backgroundColor = "#d3d3d3"; // グレーアウト
+        } else {
+            peopleCountInput.disabled = false;
+            peopleCountInput.style.backgroundColor = ""; // 元の背景色に戻す
+        }
+    });
+
+        // Google Mapsを開くボタンのクリックイベント
+        openMapBtn.addEventListener("click", function () {
+            const area = document.getElementById("area").value;
+            const address = document.getElementById("address").value;
+            const fullAddress = `静岡県下田市 ${area} ${address}`;
+            const encodedAddress = encodeURIComponent(fullAddress);
+            const googleMapsURL = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+            window.open(googleMapsURL, '_blank'); // 新しいタブで開く
+        });
+
+    // フォームの入力内容に応じてボタンの状態を更新する関数
+function updateSubmitButtonState() {
+    const incidentType = incidentTypeSelect.value;
+    const peopleCount = peopleCountInput.value;
+    const unknownPeopleChecked = unknownPeopleCheckbox.checked;
+    
+    // 「事態種別」が「要救助者あり」で、人数欄または「人数不明・複数人」にチェックがない場合、ボタンを無効にする
+    if (incidentType === "要救助者あり" && !(peopleCount || unknownPeopleChecked)) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add("disabled");
+    } else {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove("disabled");
+    }
+}
+
+// フォーム要素の変更イベントにリスナーを追加してボタンの状態を更新
+incidentTypeSelect.addEventListener("change", updateSubmitButtonState);
+peopleCountInput.addEventListener("input", updateSubmitButtonState);
+unknownPeopleCheckbox.addEventListener("change", updateSubmitButtonState);
 });
