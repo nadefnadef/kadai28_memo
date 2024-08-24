@@ -140,7 +140,8 @@ document.addEventListener("DOMContentLoaded", function () {
         actionCell.appendChild(deleteButton);
         row.appendChild(actionCell);
     
-        tableBody.appendChild(row);
+        // テーブルの先頭に新しい行を追加
+        tableBody.insertBefore(row, tableBody.firstChild);
     }
     
     // セルを作成するヘルパー関数
@@ -155,7 +156,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const savedPosts = localStorage.getItem("emergencyPosts");
         if (savedPosts) {
             const posts = JSON.parse(savedPosts);
-            posts.forEach(post => addPostToTable(post));
+        // 投稿の順序を反転させる（最新の投稿が上に来るように）
+        posts.reverse().forEach(post => addPostToTable(post));
         }
     }
 
@@ -173,19 +175,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 incidentType: cells[4].textContent,
                 area: cells[5].textContent,
                 address: cells[6].textContent,
-                mapLink: cells[7].querySelector("a")?.href,
+                latLng: cells[7].querySelector("a")?.textContent, // 緯度/経度を保存
                 photo: cells[8].querySelector("img")?.src,
                 memo: cells[9].textContent,
                 numberOfPeople: cells[10].textContent // 人数を保存
             };
         });
         localStorage.setItem("emergencyPosts", JSON.stringify(posts));
-    }
-
-    // フォームのデータをローカルストレージに保存する関数
-    function saveFormData() {
-        const formData = getFormData();
-        localStorage.setItem("emergencyFormData", JSON.stringify(formData));
     }
 
     // ローカルストレージからフォームのデータを読み込む関数
@@ -271,4 +267,5 @@ incidentTypeSelect.addEventListener("change", updateSubmitButtonState);
 peopleCountInput.addEventListener("input", updateSubmitButtonState);
 unknownPeopleCheckbox.addEventListener("change", updateSubmitButtonState);
 });
+
 
