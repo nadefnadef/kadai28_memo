@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
     async function getFormData() {
         const photoFile = document.getElementById("photo").files[0];
         let photoBase64 = null;
-
+    
         if (photoFile) {
             photoBase64 = await new Promise((resolve) => {
                 const reader = new FileReader();
@@ -61,7 +61,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 reader.readAsDataURL(photoFile);
             });
         }
-
+    
+        // 緯度/経度を抽出する関数
+        function extractLatLngFromMapLink(mapLink) {
+            const regex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+            const match = mapLink.match(regex);
+            return match ? `${match[1]}, ${match[2]}` : '';
+        }
+    
+        const mapLink = document.getElementById("mapLink").value;
+        const latLng = extractLatLngFromMapLink(mapLink);
+    
         return {
             date: new Date().toLocaleString(),
             katakanaName: document.getElementById("katakanaName").value,
@@ -70,73 +80,56 @@ document.addEventListener("DOMContentLoaded", function () {
             incidentType: document.getElementById("incidentType").value,
             area: document.getElementById("area").value,
             address: document.getElementById("address").value,
-            mapLink: document.getElementById("mapLink").value,
+            mapLink: mapLink,
+            latLng: latLng, // 緯度/経度を追加
             photo: photoBase64,
             memo: document.getElementById("memo").value,
             numberOfPeople: unknownPeopleCheckbox.checked ? "不明・複数人" : document.getElementById("peopleCount").value // 人数を追加
         };
     }
+    
 
     // 投稿をテーブルに追加
     function addPostToTable(post) {
         const tableBody = document.querySelector("#postsTable tbody");
         const row = document.createElement("tr");
-
-        const dateCell = document.createElement("td");
-        dateCell.textContent = post.date;
-        row.appendChild(dateCell);
-
-        const katakanaNameCell = document.createElement("td");
-        katakanaNameCell.textContent = post.katakanaName;
-        row.appendChild(katakanaNameCell);
-
-        const kanjiNameCell = document.createElement("td");
-        kanjiNameCell.textContent = post.kanjiName;
-        row.appendChild(kanjiNameCell);
-
-        const organizationCell = document.createElement("td");
-        organizationCell.textContent = post.organization;
-        row.appendChild(organizationCell);
-
-        const incidentTypeCell = document.createElement("td");
-        incidentTypeCell.textContent = post.incidentType;
-        row.appendChild(incidentTypeCell);
-
-        const areaCell = document.createElement("td");
-        areaCell.textContent = post.area;
-        row.appendChild(areaCell);
-
-        const addressCell = document.createElement("td");
-        addressCell.textContent = post.address;
-        row.appendChild(addressCell);
-
-        const mapLinkCell = document.createElement("td");
-        if (post.mapLink) {
-            const mapLinkElement = document.createElement("a");
-            mapLinkElement.href = post.mapLink;
-            mapLinkElement.textContent = "地図リンク";
-            mapLinkElement.target = "_blank";
-            mapLinkCell.appendChild(mapLinkElement);
+    
+        // 既存のセルを追加
+        row.appendChild(createCell(post.date));
+        row.appendChild(createCell(post.katakanaName));
+        row.appendChild(createCell(post.kanjiName));
+        row.appendChild(createCell(post.organization));
+        row.appendChild(createCell(post.incidentType));
+        row.appendChild(createCell(post.area));
+        row.appendChild(createCell(post.address));
+        
+        // 緯度/経度セルを追加
+        const latLngCell = document.createElement("td");
+        if (post.latLng) {
+            const latLngElement = document.createElement("a");
+            latLngElement.href = `https://www.google.com/maps?q=${post.latLng}`;
+            latLngElement.textContent = post.latLng;
+            latLngElement.target = "_blank";
+            latLngCell.appendChild(latLngElement);
         }
-        row.appendChild(mapLinkCell);
-
-        const photoCell = document.createElement("td");
+        row.appendChild(latLngCell);
+    
+        // その他のセルを追加
         if (post.photo) {
+            const photoCell = document.createElement("td");
             const img = document.createElement("img");
             img.src = post.photo;
             img.alt = "写真";
             photoCell.appendChild(img);
+            row.appendChild(photoCell);
+        } else {
+            row.appendChild(createCell(''));
         }
-        row.appendChild(photoCell);
-
-        const memoCell = document.createElement("td");
-        memoCell.textContent = post.memo;
-        row.appendChild(memoCell);
-
-        const numberOfPeopleCell = document.createElement("td"); // 人数セルを追加
-        numberOfPeopleCell.textContent = post.numberOfPeople;
-        row.appendChild(numberOfPeopleCell);
-
+        
+        row.appendChild(createCell(post.memo));
+        row.appendChild(createCell(post.numberOfPeople));
+        
+        // アクションセルを追加
         const actionCell = document.createElement("td");
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "削除";
@@ -146,8 +139,15 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         actionCell.appendChild(deleteButton);
         row.appendChild(actionCell);
-
+    
         tableBody.appendChild(row);
+    }
+    
+    // セルを作成するヘルパー関数
+    function createCell(text) {
+        const cell = document.createElement("td");
+        cell.textContent = text;
+        return cell;
     }
 
     // ローカルストレージに保存されている投稿をテーブルに読み込み
@@ -271,3 +271,4 @@ incidentTypeSelect.addEventListener("change", updateSubmitButtonState);
 peopleCountInput.addEventListener("input", updateSubmitButtonState);
 unknownPeopleCheckbox.addEventListener("change", updateSubmitButtonState);
 });
+
