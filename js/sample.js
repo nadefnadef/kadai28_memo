@@ -109,6 +109,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const postsTable = document.getElementById("postsTable").getElementsByTagName('tbody')[0];
         const newRow = postsTable.insertRow();
+        localStorage.removeItem('formData');
 
         // 各入力値を取得
         const katakanaName = document.getElementById("katakanaName").value;
@@ -177,9 +178,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (confirm("フォームを消去しますか？")) {
             form.reset();
             localStorage.removeItem('formData');
-            rescueDetails.style.display = "none";
-            submitBtn.disabled = true;
-            submitBtn.classList.add("disabled");
         }
     });
 
@@ -189,49 +187,36 @@ document.addEventListener("DOMContentLoaded", function () {
             katakanaName: document.getElementById("katakanaName").value,
             kanjiName: document.getElementById("kanjiName").value,
             organization: document.getElementById("organization").value,
-            incidentType: incidentType.value,
+            incidentType: document.getElementById("incidentType").value,
             area: document.getElementById("area").value,
-            address: addressInput.value,
-            mapLink: mapLinkInput.value,
+            address: document.getElementById("address").value,
+            mapLink: document.getElementById("mapLink").value,
             memo: document.getElementById("memo").value,
-            peopleCount: peopleCount.value,
-            unknownPeople: unknownPeople.checked
+            peopleCount: document.getElementById("peopleCount").value,
+            unknownPeople: document.getElementById("unknownPeople").checked
         };
         localStorage.setItem('formData', JSON.stringify(formData));
     }
 
     // フォームデータをlocalStorageから読み込む関数
     function loadFormData() {
-        const storedFormData = localStorage.getItem('formData');
-        if (storedFormData) {
-            const formData = JSON.parse(storedFormData);
-            Object.keys(formData).forEach(key => {
-                const element = document.getElementById(key);
-                if (element) {
-                    if (element.type === 'checkbox') {
-                        element.checked = formData[key];
-                    } else {
-                        element.value = formData[key] || '';
-                    }
-                }
-            });
+        if (localStorage.getItem('formData')) {
+            const formData = JSON.parse(localStorage.getItem('formData'));
+            document.getElementById("katakanaName").value = formData.katakanaName;
+            document.getElementById("kanjiName").value = formData.kanjiName;
+            document.getElementById("organization").value = formData.organization;
+            document.getElementById("incidentType").value = formData.incidentType;
+            document.getElementById("area").value = formData.area;
+            document.getElementById("address").value = formData.address;
+            document.getElementById("mapLink").value = formData.mapLink;
+            document.getElementById("memo").value = formData.memo;
+            document.getElementById("peopleCount").value = formData.peopleCount;
+            document.getElementById("unknownPeople").checked = formData.unknownPeople;
 
-            // "要救助者あり"が選択された場合の表示を復元
-            if (incidentType.value === "要救助者あり") {
-                rescueDetails.style.display = "block";
-                peopleCount.required = true;
-            } else {
-                rescueDetails.style.display = "none";
-                peopleCount.required = false;
+            if (formData.incidentType === "要救助者あり") {
+                document.getElementById("rescueDetails").style.display = "block";
+                document.getElementById("peopleCount").required = true;
             }
-
-            // 人数不明チェックボックスがチェックされている場合の状態を復元
-            peopleCount.disabled = unknownPeople.checked;
-
-            // フォームの有効性をチェックし、送信ボタンの状態を更新
-            let isValid = form.checkValidity();
-            submitBtn.disabled = !isValid;
-            submitBtn.classList.toggle("disabled", !isValid);
         }
     }
 });
