@@ -1,237 +1,216 @@
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+document.addEventListener("DOMContentLoaded", function () {
+    const toggleFormButton = document.querySelector(".toggle-form-button");
+    const formContainer = document.querySelector(".form-container");
+    const form = document.getElementById("emergencyForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const incidentType = document.getElementById("incidentType");
+    const openMapBtn = document.getElementById("openMapBtn");
+    const mapLinkInput = document.getElementById("mapLink");
+    let selectedLocation = null;
 
-header {
-    width: 100%;
-    background-image: url('https://t3.ftcdn.net/jpg/02/15/25/66/360_F_215256610_D1nzrwWuINTR113WPV6ddsHzBTVoZdrc.jpg');
-    background-size: cover;
-    background-position: center;
-    text-align: center;
-    color: white;
-    padding: 20px;
-    font-size: 24px;
-}
+    // ページ読み込み時にフォームのデータをlocalStorageから復元
+    loadFormData();
+    loadPosts();
 
-main {
-    width: 90%;
-    max-width: 1200px;
-}
+    // フォームの表示/非表示を切り替え
+    toggleFormButton.addEventListener("click", function () {
+        if (formContainer.style.display === "none") {
+            formContainer.style.display = "block";
+        } else {
+            formContainer.style.display = "none";
+        }
+    });
 
-.button-container {
-    text-align: center;
-    margin: 20px 0;
-}
+    // フォーム送信時の処理
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const postData = getFormData();
+        addPostToTable(postData);
+        savePosts();
+        form.reset();
+        submitBtn.disabled = true;
+        submitBtn.classList.add("disabled");
+        toggleFormButton.click();  // フォームを非表示に戻す
+    });
 
-.toggle-form-button {
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    border: 1px solid #4CAF50;
-    background-color: white;
-    color: #4CAF50;
-    transition: transform 0.3s ease;
-}
+    // フォームの入力が完了したら投稿ボタンを有効化
+    form.addEventListener("input", function () {
+        submitBtn.disabled = !form.checkValidity();
+        if (!submitBtn.disabled) {
+            submitBtn.classList.remove("disabled");
+        } else {
+            submitBtn.classList.add("disabled");
+        }
+    });
 
-.toggle-form-button:hover {
-    transform: scale(1.1);
-}
+    // フォームデータを取得してオブジェクトとして返す
+    function getFormData() {
+        return {
+            date: new Date().toLocaleString(),
+            katakanaName: document.getElementById("katakanaName").value,
+            kanjiName: document.getElementById("kanjiName").value,
+            organization: document.getElementById("organization").value,
+            incidentType: document.getElementById("incidentType").value,
+            area: document.getElementById("area").value,
+            address: document.getElementById("address").value,
+            mapLink: document.getElementById("mapLink").value,
+            photo: document.getElementById("photo").files[0],
+            memo: document.getElementById("memo").value
+        };
+    }
 
-.table-container {
-    width: 100%;
-    margin-bottom: 20px;
-}
+    // Google Map ボタンのクリック時に新しいタブでGoogle Mapを開く
+    openMapBtn.addEventListener("click", function () {
+        const area = document.getElementById("area").value;
+        const address = document.getElementById("address").value;
+        
+        // 発生場所と住所（つづき）を結合してGoogle Mapで検索
+        const searchQuery = `${area} ${address}`;
+        const googleMapUrl = `https://www.google.com/maps/search/?q=${encodeURIComponent(searchQuery)}`;
+        
+        // Google Mapを別タブで開く
+        window.open(googleMapUrl, '_blank');
+    });
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+    // 投稿をテーブルに追加
+    function addPostToTable(post) {
+        const tableBody = document.querySelector("#postsTable tbody");
+        const row = document.createElement("tr");
 
-table, th, td {
-    border: 1px solid black;
-}
+        const dateCell = document.createElement("td");
+        dateCell.textContent = post.date;
+        row.appendChild(dateCell);
 
-th {
-    background-color: #e0e0e0;
-    font-size: 14px;
-}
+        const katakanaNameCell = document.createElement("td");
+        katakanaNameCell.textContent = post.katakanaName;
+        row.appendChild(katakanaNameCell);
 
-th, td {
-    padding: 10px;
-    text-align: left;
-    font-size: 12px;
-    overflow: hidden;
-    white-space: pre-wrap;
-    text-overflow: ellipsis;
-    word-wrap: break-word;
-}
+        const kanjiNameCell = document.createElement("td");
+        kanjiNameCell.textContent = post.kanjiName;
+        row.appendChild(kanjiNameCell);
 
-td img {
-    width: 50px;
-    cursor: pointer;
-}
+        const organizationCell = document.createElement("td");
+        organizationCell.textContent = post.organization;
+        row.appendChild(organizationCell);
 
-td img:hover {
-    width: 150px;
-    transition: width 0.3s ease;
-}
+        const incidentTypeCell = document.createElement("td");
+        incidentTypeCell.textContent = post.incidentType;
+        row.appendChild(incidentTypeCell);
 
-td a {
-    color: blue;
-    text-decoration: underline;
-}
+        const areaCell = document.createElement("td");
+        areaCell.textContent = post.area;
+        row.appendChild(areaCell);
 
-td a:hover {
-    color: red;
-}
+        const addressCell = document.createElement("td");
+        addressCell.textContent = post.address;
+        row.appendChild(addressCell);
 
+        const mapLinkCell = document.createElement("td");
+        if (post.mapLink) {
+            const mapLinkElement = document.createElement("a");
+            mapLinkElement.href = post.mapLink;
+            mapLinkElement.textContent = "地図リンク";
+            mapLinkElement.target = "_blank";
+            mapLinkCell.appendChild(mapLinkElement);
+        }
+        row.appendChild(mapLinkCell);
 
-td .tooltip {
-    position: relative;
-    display: inline-block;
-    cursor: pointer;
-}
+        const photoCell = document.createElement("td");
+        if (post.photo) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = document.createElement("img");
+                img.src = e.target.result;
+                img.alt = "写真";
+                photoCell.appendChild(img);
+            };
+            reader.readAsDataURL(post.photo);
+        }
+        row.appendChild(photoCell);
 
-td .tooltip .tooltiptext {
-    visibility: hidden;
-    width: 100px;
-    background-color: #f9f9f9;
-    color: #000;
-    text-align: left;
-    border-radius: 5px;
-    padding: 5px;
-    position: absolute;
-    z-index: 1;
-    bottom: 100%;
-    left: 50%;
-    margin-left: -50px;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
+        const memoCell = document.createElement("td");
+        memoCell.textContent = post.memo;
+        row.appendChild(memoCell);
 
-td .tooltip:hover .tooltiptext {
-    visibility: visible;
-    opacity: 1;
-}
+        const actionCell = document.createElement("td");
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "削除";
+        deleteButton.addEventListener("click", function () {
+            row.remove();
+            savePosts();
+        });
+        actionCell.appendChild(deleteButton);
+        row.appendChild(actionCell);
 
-.form-container {
-    width: 100%;
-    display: none; /* 初期表示を非表示に設定 */
-}
+        tableBody.appendChild(row);
+    }
 
-form {
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-}
+    // ローカルストレージに保存されている投稿をテーブルに読み込み
+    function loadPosts() {
+        const savedPosts = localStorage.getItem("emergencyPosts");
+        if (savedPosts) {
+            const posts = JSON.parse(savedPosts);
+            posts.forEach(post => addPostToTable(post));
+        }
+    }
 
-label {
-    display: block;
-    margin-bottom: 10px;
-}
+    // フォームのデータをローカルストレージに保存
+    function savePosts() {
+        const tableBody = document.querySelector("#postsTable tbody");
+        const rows = Array.from(tableBody.querySelectorAll("tr"));
+        const posts = rows.map(row => {
+            const cells = row.querySelectorAll("td");
+            return {
+                date: cells[0].textContent,
+                katakanaName: cells[1].textContent,
+                kanjiName: cells[2].textContent,
+                organization: cells[3].textContent,
+                incidentType: cells[4].textContent,
+                area: cells[5].textContent,
+                address: cells[6].textContent,
+                mapLink: cells[7].querySelector("a")?.href,
+                photo: cells[8].querySelector("img")?.src,
+                memo: cells[9].textContent
+            };
+        });
+        localStorage.setItem("emergencyPosts", JSON.stringify(posts));
+    }
 
-input[type="text"],
-input[type="tel"],
-input[type="email"],
-input[type="url"],
-input[type="number"],
-select,
-textarea {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
+    // フォームのデータをローカルストレージに保存する関数
+    function saveFormData() {
+        const formData = getFormData();
+        localStorage.setItem("emergencyFormData", JSON.stringify(formData));
+    }
 
-.required::after {
-    content: "（入力必須）";
-    color: red;
-    margin-left: 5px;
-}
+    // ローカルストレージからフォームのデータを読み込む関数
+    function loadFormData() {
+        const savedFormData = localStorage.getItem("emergencyFormData");
+        if (savedFormData) {
+            const formData = JSON.parse(savedFormData);
+            document.getElementById("katakanaName").value = formData.katakanaName || "";
+            document.getElementById("kanjiName").value = formData.kanjiName || "";
+            document.getElementById("organization").value = formData.organization || "";
+            document.getElementById("incidentType").value = formData.incidentType || "";
+            document.getElementById("area").value = formData.area || "";
+            document.getElementById("address").value = formData.address || "";
+            document.getElementById("mapLink").value = formData.mapLink || "";
+            document.getElementById("memo").value = formData.memo || "";
+        }
+    }
 
-button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
+    // クリアボタンのクリック時の処理
+    clearBtn.addEventListener("click", function () {
+        form.reset();
+        localStorage.removeItem("emergencyFormData");
+        submitBtn.disabled = true;
+        submitBtn.classList.add("disabled");
+    });
 
-button[type="submit"] {
-    background-color: #4CAF50;
-    color: white;
-}
-
-button[type="button"] {
-    background-color: #f44336;
-    color: white;
-    margin-left: 10px;
-}
-
-.disabled {
-    background-color: #ddd;
-    cursor: not-allowed;
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
-    padding-top: 60px;
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.map-container {
-    margin: 10px 0;
-}
-
-#map {
-    width: 100%;
-    height: 400px;
-}
-
-.map-container button {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-.map-container button:hover {
-    background-color: #45a049;
-}
+    // ローカルストレージから投稿データを削除する関数
+    function clearPosts() {
+        localStorage.removeItem("emergencyPosts");
+        const tableBody = document.querySelector("#postsTable tbody");
+        tableBody.innerHTML = "";
+    }
+});
