@@ -1,275 +1,237 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const toggleFormButton = document.querySelector(".toggle-form-button");
-    const formContainer = document.querySelector(".form-container");
-    const form = document.getElementById("emergencyForm");
-    const submitBtn = document.getElementById("submitBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const incidentType = document.getElementById("incidentType");
-    const rescueDetails = document.getElementById("rescueDetails");
-    const peopleCount = document.getElementById("peopleCount");
-    const unknownPeople = document.getElementById("unknownPeople");
-    const openMapBtn = document.getElementById("openMapBtn");
-    const mapModal = document.getElementById("mapModal");
-    const closeBtn = document.querySelector(".close");
-    const mapLinkInput = document.getElementById("mapLink");
-    const addressInput = document.getElementById("address");
-    let selectedLocation = null;
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-    // ページ読み込み時にフォームのデータをlocalStorageから復元
-    loadFormData();
-    loadPosts();
+header {
+    width: 100%;
+    background-image: url('https://t3.ftcdn.net/jpg/02/15/25/66/360_F_215256610_D1nzrwWuINTR113WPV6ddsHzBTVoZdrc.jpg');
+    background-size: cover;
+    background-position: center;
+    text-align: center;
+    color: white;
+    padding: 20px;
+    font-size: 24px;
+}
 
-    // フォームの表示・非表示の切り替え
-    toggleFormButton.addEventListener("click", () => {
-        const isFormVisible = formContainer.style.display === "block";
-        formContainer.style.display = isFormVisible ? "none" : "block";
-        toggleFormButton.textContent = isFormVisible ? "新規被害について投稿する" : "投稿をキャンセル";
-    });
+main {
+    width: 90%;
+    max-width: 1200px;
+}
 
-    // 入力内容を確認して、送信ボタンを有効化
-    form.addEventListener("input", () => {
-        let isValid = form.checkValidity();
-        submitBtn.disabled = !isValid;
-        submitBtn.classList.toggle("disabled", !isValid);
-        saveFormData(); // 入力があるたびにフォームデータを保存
-    });
+.button-container {
+    text-align: center;
+    margin: 20px 0;
+}
 
-    // "要救助者あり"が選択された場合、追加の入力項目を表示
-    incidentType.addEventListener("change", () => {
-        if (incidentType.value === "要救助者あり") {
-            rescueDetails.style.display = "block";
-            peopleCount.required = true;
-        } else {
-            rescueDetails.style.display = "none";
-            peopleCount.required = false;
-        }
-        saveFormData(); // 選択に応じてフォームデータを保存
-    });
+.toggle-form-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: 1px solid #4CAF50;
+    background-color: white;
+    color: #4CAF50;
+    transition: transform 0.3s ease;
+}
 
-    // 人数不明チェックボックスが選択された場合、人数入力を無効化
-    unknownPeople.addEventListener("change", () => {
-        peopleCount.disabled = unknownPeople.checked;
-        if (unknownPeople.checked) {
-            peopleCount.value = "";
-        }
-        saveFormData(); // チェックボックスの選択に応じてフォームデータを保存
-    });
+.toggle-form-button:hover {
+    transform: scale(1.1);
+}
 
-    // Google Mapsの表示
-    openMapBtn.addEventListener("click", () => {
-        mapModal.style.display = "block";
-        initMap();
-    });
+.table-container {
+    width: 100%;
+    margin-bottom: 20px;
+}
 
-    // モーダルを閉じる
-    closeBtn.addEventListener("click", () => {
-        mapModal.style.display = "none";
-    });
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-    window.addEventListener("click", (event) => {
-        if (event.target === mapModal) {
-            mapModal.style.display = "none";
-        }
-    });
+table, th, td {
+    border: 1px solid black;
+}
 
-    // Google Mapsの初期化
-    function initMap() {
-        const mapOptions = {
-            center: { lat: 35.6895, lng: 139.6917 }, // 東京をデフォルトの中心とする
-            zoom: 12
-        };
+th {
+    background-color: #e0e0e0;
+    font-size: 14px;
+}
 
-        const map = new google.maps.Map(document.getElementById("map"), mapOptions);
-        const geocoder = new google.maps.Geocoder();
+th, td {
+    padding: 10px;
+    text-align: left;
+    font-size: 12px;
+    overflow: hidden;
+    white-space: pre-wrap;
+    text-overflow: ellipsis;
+    word-wrap: break-word;
+}
 
-        // 地図上で右クリックした位置の情報を取得
-        map.addListener("rightclick", function (event) {
-            selectedLocation = event.latLng;
-            const mapLink = `https://www.google.com/maps/@${selectedLocation.lat()},${selectedLocation.lng()},15z`;
-            
-            // 逆ジオコーディングで住所を取得
-            geocoder.geocode({ location: selectedLocation }, (results, status) => {
-                if (status === "OK" && results[0]) {
-                    addressInput.value = results[0].formatted_address || "不明";
-                    // Google Mapsリンクを自動入力するかどうかをオプションに
-                    if (confirm("この場所のリンクをフォームにコピーしますか？")) {
-                        mapLinkInput.value = mapLink;
-                    }
-                    saveFormData(); // 地図での選択後にフォームデータを保存
-                    mapModal.style.display = "none";
-                } else {
-                    alert("住所を取得できませんでした");
-                }
-            });
-        });
-    }
+td img {
+    width: 50px;
+    cursor: pointer;
+}
 
-    // フォーム送信時にデータをテーブルに追加
-    form.addEventListener("submit", (e) => {
-        e.preventDefault();
+td img:hover {
+    width: 150px;
+    transition: width 0.3s ease;
+}
 
-        const postsTable = document.getElementById("postsTable").getElementsByTagName('tbody')[0];
-        const newRow = postsTable.insertRow();
+td a {
+    color: blue;
+    text-decoration: underline;
+}
 
-        // 各入力値を取得
-        const katakanaName = document.getElementById("katakanaName").value;
-        const kanjiName = document.getElementById("kanjiName").value;
-        const organization = document.getElementById("organization").value;
-        const incidentTypeValue = incidentType.value;
-        const area = document.getElementById("area").value;
-        const address = document.getElementById("address").value || "なし";
-        const mapLink = document.getElementById("mapLink").value;
-        const memo = document.getElementById("memo").value || "なし";
-        const photo = document.getElementById("photo").files[0];
+td a:hover {
+    color: red;
+}
 
-        const now = new Date();
-        const datetime = now.toLocaleString('ja-JP', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
 
-        // Google Mapsリンクから緯度・経度を抽出
-        const regex = /@([-.\d]+),([-.\d]+)/;
-        const match = mapLink.match(regex);
-        let latLon = "不明";
-        if (match) {
-            const lat = match[1];
-            const lon = match[2];
-            latLon = `${lat}, ${lon}`;
-        }
+td .tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
 
-        // 新しい行にデータを追加
-        newRow.innerHTML = `
-            <td>${datetime}</td>
-            <td>${katakanaName}</td>
-            <td>${kanjiName}</td>
-            <td>${organization}</td>
-            <td>${incidentTypeValue}</td>
-            <td>${area}</td>
-            <td>${address}</td>
-            <td>${mapLink ? `<a href="${mapLink}" target="_blank">${latLon}</a>` : 'なし'}</td>
-            <td>${photo ? '<img src="' + URL.createObjectURL(photo) + '" alt="現場写真">' : 'なし'}</td>
-            <td class="tooltip">${memo.split('').map((char, index) => (index % 10 === 9 ? char + "<br>" : char)).join('')}<span class="tooltiptext">${memo}</span></td>
-            <td><button class="deleteBtn">削除</button></td>
-        `;
+td .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 100px;
+    background-color: #f9f9f9;
+    color: #000;
+    text-align: left;
+    border-radius: 5px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -50px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
 
-        // フォームをリセットし、localStorageのデータもクリア
-        form.reset();
-        localStorage.removeItem('formData');
-        formContainer.style.display = "none";
-        submitBtn.disabled = true;
-        submitBtn.classList.add("disabled");
-        toggleFormButton.textContent = "新規被害について投稿する";
+td .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
 
-        // テーブルのデータをローカルストレージに保存
-        savePosts();
+.form-container {
+    width: 100%;
+    display: none; /* 初期表示を非表示に設定 */
+}
 
-        // 削除ボタンのイベントリスナーを追加
-        const deleteBtn = newRow.querySelector(".deleteBtn");
-        deleteBtn.addEventListener("click", () => {
-            if (confirm("この投稿を削除しますか？")) {
-                newRow.remove();
-                savePosts(); // データ削除後にローカルストレージを更新
-            }
-        });
-    });
+form {
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
 
-    // 消去ボタンの動作
-    clearBtn.addEventListener("click", () => {
-        if (confirm("フォームを消去しますか？")) {
-            form.reset();
-            localStorage.removeItem('formData');
-        }
-    });
+label {
+    display: block;
+    margin-bottom: 10px;
+}
 
-    // フォームデータをlocalStorageに保存する関数
-    function saveFormData() {
-        const formData = {
-            katakanaName: document.getElementById("katakanaName").value,
-            kanjiName: document.getElementById("kanjiName").value,
-            organization: document.getElementById("organization").value,
-            incidentType: incidentType.value,
-            area: document.getElementById("area").value,
-            address: document.getElementById("address").value,
-            mapLink: document.getElementById("mapLink").value,
-            memo: document.getElementById("memo").value,
-            unknownPeople: unknownPeople.checked,
-            peopleCount: peopleCount.value
-        };
-        localStorage.setItem('formData', JSON.stringify(formData));
-    }
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+input[type="url"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
 
-    // localStorageからフォームデータを読み込む関数
-    function loadFormData() {
-        const formData = JSON.parse(localStorage.getItem('formData'));
-        if (formData) {
-            document.getElementById("katakanaName").value = formData.katakanaName || "";
-            document.getElementById("kanjiName").value = formData.kanjiName || "";
-            document.getElementById("organization").value = formData.organization || "";
-            incidentType.value = formData.incidentType || "";
-            document.getElementById("area").value = formData.area || "";
-            document.getElementById("address").value = formData.address || "";
-            mapLinkInput.value = formData.mapLink || "";
-            document.getElementById("memo").value = formData.memo || "";
-            unknownPeople.checked = formData.unknownPeople || false;
-            peopleCount.value = formData.peopleCount || "";
-        }
-    }
+.required::after {
+    content: "（入力必須）";
+    color: red;
+    margin-left: 5px;
+}
 
-    // 投稿内容をlocalStorageから読み込む関数
-    function loadPosts() {
-        const postsTable = document.getElementById("postsTable").getElementsByTagName('tbody')[0];
-        const posts = JSON.parse(localStorage.getItem('posts')) || [];
-        posts.forEach(post => {
-            const newRow = postsTable.insertRow();
-            newRow.innerHTML = `
-                <td>${post.datetime}</td>
-                <td>${post.katakanaName}</td>
-                <td>${post.kanjiName}</td>
-                <td>${post.organization}</td>
-                <td>${post.incidentType}</td>
-                <td>${post.area}</td>
-                <td>${post.address}</td>
-                <td>${post.mapLink ? `<a href="${post.mapLink}" target="_blank">${post.latLon}</a>` : 'なし'}</td>
-                <td>${post.photo ? '<img src="' + post.photo + '" alt="現場写真">' : 'なし'}</td>
-                <td class="tooltip">${post.memo.split('').map((char, index) => (index % 10 === 9 ? char + "<br>" : char)).join('')}<span class="tooltiptext">${post.memo}</span></td>
-                <td><button class="deleteBtn">削除</button></td>
-            `;
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
 
-            // 削除ボタンのイベントリスナーを追加
-            const deleteBtn = newRow.querySelector(".deleteBtn");
-            deleteBtn.addEventListener("click", () => {
-                if (confirm("この投稿を削除しますか？")) {
-                    newRow.remove();
-                    savePosts(); // データ削除後にローカルストレージを更新
-                }
-            });
-        });
-    }
+button[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+}
 
-    // 投稿内容をlocalStorageに保存する関数
-    function savePosts() {
-        const postsTable = document.getElementById("postsTable").getElementsByTagName('tbody')[0];
-        const rows = postsTable.getElementsByTagName('tr');
-        const posts = Array.from(rows).map(row => {
-            return {
-                datetime: row.cells[0].innerText,
-                katakanaName: row.cells[1].innerText,
-                kanjiName: row.cells[2].innerText,
-                organization: row.cells[3].innerText,
-                incidentType: row.cells[4].innerText,
-                area: row.cells[5].innerText,
-                address: row.cells[6].innerText,
-                mapLink: row.cells[7].innerHTML.includes('<a') ? row.cells[7].getElementsByTagName('a')[0].href : '',
-                latLon: row.cells[7].innerText,
-                photo: row.cells[8].getElementsByTagName('img')[0] ? row.cells[8].getElementsByTagName('img')[0].src : '',
-                memo: row.cells[9].innerText
-            };
-        });
-        localStorage.setItem('posts', JSON.stringify(posts));
-    }
-});
+button[type="button"] {
+    background-color: #f44336;
+    color: white;
+    margin-left: 10px;
+}
 
+.disabled {
+    background-color: #ddd;
+    cursor: not-allowed;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.map-container {
+    margin: 10px 0;
+}
+
+#map {
+    width: 100%;
+    height: 400px;
+}
+
+.map-container button {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.map-container button:hover {
+    background-color: #45a049;
+}
