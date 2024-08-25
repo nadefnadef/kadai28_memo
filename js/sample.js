@@ -182,11 +182,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 katakanaName: cells[1].textContent,
                 kanjiName: cells[2].textContent,
                 organization: cells[3].textContent,
-                department: cells[4].innerText, // New
-                position: cells[5].innerText, // New
-                phone: cells[6].querySelector('a').getAttribute('href').replace('tel:', ''), // New
-                email: cells[7].querySelector('a').getAttribute('href').replace('mailto:', ''), // New
-                landmark: cells[8].innerText, // New
+                department: cells[4].textContent, // 修正
+                position: cells[5].textContent,  // 修正
+                phone: cells[6]?.querySelector('a')?.getAttribute('href').replace('tel:', '') || cells[6].textContent, // 修正
+                email: cells[7]?.querySelector('a')?.getAttribute('href').replace('mailto:', '') || cells[7].textContent, // 修正
+                landmark: cells[8].textContent,  // 修正
                 incidentType: cells[9].textContent,
                 area: cells[10].textContent,
                 address: cells[11].textContent,
