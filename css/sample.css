@@ -18,8 +18,7 @@ header {
 }
 
 main {
-    width: 90%;
-    max-width: 1200px;
+    width: 100%;
     margin-top: 20px;
 }
 
@@ -237,12 +236,3 @@ button[type="button"] {
     background-color: #45a049;
 }
 
-td a:hover::after {
-    content: attr(href);
-    position: absolute;
-    background-color: #fff;
-    padding: 5px;
-    border: 1px solid #ccc;
-    white-space: nowrap;
-    z-index: 10;
-}
