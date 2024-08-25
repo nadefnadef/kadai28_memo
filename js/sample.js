@@ -77,6 +77,11 @@ document.addEventListener("DOMContentLoaded", function () {
             katakanaName: document.getElementById("katakanaName").value,
             kanjiName: document.getElementById("kanjiName").value,
             organization: document.getElementById("organization").value,
+            department: document.getElementById("department").value,
+            position: document.getElementById("position").value,
+            phone: document.getElementById("phone").value,
+            email: document.getElementById("email").value,
+            landmark: document.getElementById("landmark").value,
             incidentType: document.getElementById("incidentType").value,
             area: document.getElementById("area").value,
             address: document.getElementById("address").value,
@@ -99,6 +104,11 @@ document.addEventListener("DOMContentLoaded", function () {
         row.appendChild(createCell(post.katakanaName));
         row.appendChild(createCell(post.kanjiName));
         row.appendChild(createCell(post.organization));
+        row.appendChild(createCell(post.department));
+        row.appendChild(createCell(post.position));
+        row.appendChild(createCell(post.phone));
+        row.appendChild(createCell(post.email));
+        row.appendChild(createCell(post.landmark));
         row.appendChild(createCell(post.incidentType));
         row.appendChild(createCell(post.area));
         row.appendChild(createCell(post.address));
@@ -172,13 +182,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 katakanaName: cells[1].textContent,
                 kanjiName: cells[2].textContent,
                 organization: cells[3].textContent,
-                incidentType: cells[4].textContent,
-                area: cells[5].textContent,
-                address: cells[6].textContent,
-                latLng: cells[7].querySelector("a")?.textContent, // 緯度/経度を保存
-                photo: cells[8].querySelector("img")?.src,
-                memo: cells[9].textContent,
-                numberOfPeople: cells[10].textContent // 人数を保存
+                department: cells[4].innerText, // New
+                position: cells[5].innerText, // New
+                phone: cells[6].querySelector('a').getAttribute('href').replace('tel:', ''), // New
+                email: cells[7].querySelector('a').getAttribute('href').replace('mailto:', ''), // New
+                landmark: cells[8].innerText, // New
+                incidentType: cells[9].textContent,
+                area: cells[10].textContent,
+                address: cells[11].textContent,
+                latLng: cells[12].querySelector("a")?.textContent, // 緯度/経度を保存
+                photo: cells[13].querySelector("img")?.src,
+                memo: cells[14].textContent,
+                numberOfPeople: cells[15].textContent // 人数を保存
             };
         });
         localStorage.setItem("emergencyPosts", JSON.stringify(posts));
@@ -192,6 +207,11 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("katakanaName").value = formData.katakanaName || "";
             document.getElementById("kanjiName").value = formData.kanjiName || "";
             document.getElementById("organization").value = formData.organization || "";
+            document.getElementById("department").value = formData.department || "";
+            document.getElementById("position").value = formData.position || "";
+            document.getElementById("phone").value = formData.phone || "";
+            document.getElementById("email").value = formData.email || "";
+            document.getElementById("landmark").value = formData.landmark || "";
             document.getElementById("incidentType").value = formData.incidentType || "";
             document.getElementById("area").value = formData.area || "";
             document.getElementById("address").value = formData.address || "";
@@ -267,5 +287,3 @@ incidentTypeSelect.addEventListener("change", updateSubmitButtonState);
 peopleCountInput.addEventListener("input", updateSubmitButtonState);
 unknownPeopleCheckbox.addEventListener("change", updateSubmitButtonState);
 });
-
-
